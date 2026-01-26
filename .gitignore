@@ -1,0 +1,9 @@
+# SudoWP Audit Files
+sudowp_code_dump.txt
+structure.txt
+*.log
+
+# System & IDE
+.DS_Store
+.idea/
+.vscode/
