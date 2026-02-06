@@ -150,7 +150,7 @@ abstract class Ai1ec_Base_Extension_Controller {
         if ( ! current_user_can( 'activate_plugins' ) ) {
             return;
         }
-        $plugin        = isset( $_REQUEST['plugin'] ) ? $_REQUEST['plugin'] : '';
+        $plugin        = isset( $_REQUEST['plugin'] ) ? sanitize_text_field( $_REQUEST['plugin'] ) : '';
         $referer       = 'deactivate-plugin_' . $plugin;
         // if we are disabling the plugin in the exception handler, this can't be done.
         // but i want to disable options

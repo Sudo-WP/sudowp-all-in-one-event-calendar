@@ -19,10 +19,24 @@ class Ai1ec_Render_Strategy_Jsonp extends Ai1ec_Http_Response_Render_Strategy {
         header( 'Content-Type: application/json; charset=UTF-8' );
         $data   = Ai1ec_Http_Response_Helper::utf8( $params['data'] );
         $output = json_encode( $data );
+        
+        // Determine callback and validate it for security
+        $callback = '';
         if ( ! empty( $params['callback'] ) ) {
-            $output = $params['callback'] . '(' . $output . ')';
+            $callback = $params['callback'];
         } else if ( isset( $_GET['callback'] ) ) {
-            $output = $_GET['callback'] . '(' . $output . ')';
+            $callback = $_GET['callback'];
+        }
+        
+        // Validate callback name to prevent XSS via JSONP injection
+        // Only allow valid JavaScript identifiers (alphanumeric, underscore, dollar sign)
+        if ( ! empty( $callback ) ) {
+            if ( preg_match( '/^[a-zA-Z_$][a-zA-Z0-9_$]*$/', $callback ) ) {
+                $output = $callback . '(' . $output . ')';
+            } else {
+                // Invalid callback name - log and return JSON only
+                error_log( 'SudoWP AI1EC Security: Invalid JSONP callback rejected: ' . esc_html( $callback ) );
+            }
         }
 
         echo $output;

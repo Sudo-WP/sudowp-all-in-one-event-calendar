@@ -24,10 +24,28 @@ class Ai1ec_Command_Change_Theme extends Ai1ec_Command {
             '',
             $_GET['ai1ec_stylesheet']
         );
+        
+        // Sanitize and validate theme paths to prevent path traversal
+        $theme_root = realpath( $_GET['ai1ec_theme_root'] );
+        $theme_dir  = realpath( $_GET['ai1ec_theme_dir'] );
+        $theme_url  = esc_url_raw( $_GET['ai1ec_theme_url'] );
+        
+        // Validate that paths are within the plugin directory
+        $plugin_path = realpath( AI1EC_PATH );
+        if ( 
+            ! $theme_root || 
+            ! $theme_dir || 
+            strpos( $theme_root, $plugin_path ) !== 0 ||
+            strpos( $theme_dir, $plugin_path ) !== 0
+        ) {
+            error_log( 'SudoWP AI1EC Security: Invalid theme path detected' );
+            wp_die( __( 'Invalid theme path.', 'all-in-one-event-calendar' ) );
+        }
+        
         $this->_registry->get( 'theme.loader' )->switch_theme( array(
-            'theme_root' => realpath( $_GET['ai1ec_theme_root'] ),
-            'theme_dir'  => realpath( $_GET['ai1ec_theme_dir'] ),
-            'theme_url'  => $_GET['ai1ec_theme_url'],
+            'theme_root' => $theme_root,
+            'theme_dir'  => $theme_dir,
+            'theme_url'  => $theme_url,
             'stylesheet' => $stylesheet,
             'legacy'     => false
         ) );
