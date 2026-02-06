@@ -3,6 +3,7 @@
 ![WP Version](https://img.shields.io/badge/WordPress-6.7%2B-blue)
 ![PHP Version](https://img.shields.io/badge/PHP-8.2%2B-purple)
 ![Status](https://img.shields.io/badge/Status-Maintenance-orange)
+![Security](https://img.shields.io/badge/Security-Hardened-green)
 
 **A community-maintained rescue of the All-in-One Event Calendar plugin.**
 
@@ -15,13 +16,32 @@ The original plugin was closed on WordPress.org to force a migration to a SaaS p
 
 ## Patches & Improvements
 
-### 1. WordPress 6.7 Compatibility
+### 1. Security Hardening (v3.0.3)
+* **XSS Prevention:** Fixed JSONP callback injection vulnerability with strict whitelist validation
+* **Path Traversal:** Secured theme switching with directory validation
+* **Input Validation:** All user inputs sanitized following OWASP guidelines
+* **Authorization:** Enhanced capability checks on AJAX endpoints
+* **PHP 8 Compatibility:** Replaced deprecated `create_function()`
+* **Documentation:** Added comprehensive [SECURITY.md](SECURITY.md) policy
+
+### 2. WordPress 6.7 Compatibility
 * **Issue:** The original plugin loaded translations too early, triggering PHP notices in the admin panel.
 * **Fix:** We deferred `load_plugin_textdomain` to the `init` hook, complying with modern WP standards.
 
-### 2. Modernization
+### 3. Modernization
 * **Strict Typing:** The main entry point now enforces `declare(strict_types=1);`.
 * **Bootloader:** Refactored the initialization logic to be more robust.
+* **Security:** Follow OWASP Top 10 and WordPress security best practices.
+
+## Security
+
+This plugin has undergone a comprehensive security audit. See [SECURITY.md](SECURITY.md) for:
+- Vulnerability disclosure policy
+- Security audit results
+- Fixed vulnerabilities (XSS, Path Traversal, Input Validation)
+- Security best practices
+
+To report security issues, please email: security@sudowp.com
 
 ## Installation
 
@@ -31,6 +51,15 @@ The original plugin was closed on WordPress.org to force a migration to a SaaS p
 4.  Activate.
 
 **Disclaimer:** This is a Maintenance Fork. We are NOT adding new features. Our goal is to keep the existing calendar functionality working securely on modern servers.
+
+## Changelog
+
+See [readme.txt](readme.txt) for detailed changelog.
+
+**Latest Version: 3.0.3 (Security Edition)**
+- Fixed multiple security vulnerabilities
+- Enhanced input validation and authorization
+- PHP 8.0+ compatibility improvements
 
 ---
 *Forked and maintained by the SudoWP Project.*

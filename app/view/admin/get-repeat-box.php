@@ -16,11 +16,23 @@ class Ai1ec_View_Admin_Get_repeat_Box extends Ai1ec_Base {
      * @return string
      **/
     public function get_repeat_box() {
+        // Verify user has permission to edit events
+        if ( ! current_user_can( 'edit_ai1ec_events' ) ) {
+            $output = array(
+                'error'   => true,
+                'message' => Ai1ec_I18n::__( 'You do not have permission to perform this action.' ),
+                'repeat'  => 0,
+            );
+            $json_strategy = $this->_registry->get( 'http.response.render.strategy.json' );
+            $json_strategy->render( array( 'data' => $output ) );
+            return;
+        }
+        
         $time_system = $this->_registry->get( 'date.system' );
         $loader = $this->_registry->get( 'theme.loader' );
-        $repeat  = (int) $_REQUEST["repeat"];
+        $repeat  = isset( $_REQUEST["repeat"] ) ? (int) $_REQUEST["repeat"] : 0;
         $repeat  = $repeat == 1 ? 1 : 0;
-        $post_id = (int) $_REQUEST["post_id"];
+        $post_id = isset( $_REQUEST["post_id"] ) ? (int) $_REQUEST["post_id"] : 0;
         $count   = 100;
         $end     = 0;
         $until   = $time_system->current_time( true );
@@ -154,6 +166,17 @@ class Ai1ec_View_Admin_Get_repeat_Box extends Ai1ec_Base {
      * @return void
      **/
     public function convert_rrule_to_text() {
+        // Verify user has permission to edit events
+        if ( ! current_user_can( 'edit_ai1ec_events' ) ) {
+            $output = array(
+                'error'   => true,
+                'message' => Ai1ec_I18n::__( 'You do not have permission to perform this action.' ),
+            );
+            $json_strategy = $this->_registry->get( 'http.response.render.strategy.json' );
+            $json_strategy->render( array( 'data' => $output ) );
+            return;
+        }
+        
         $error   = false;
         $message = '';
         // check to see if RRULE is set
@@ -171,9 +194,11 @@ class Ai1ec_View_Admin_Get_repeat_Box extends Ai1ec_Base {
                 //
                 //} else {
                     $rrule = $this->_registry->get( 'recurrence.rule' );
+                    // Sanitize rrule input before processing
+                    $rrule_input = sanitize_text_field( $_REQUEST['rrule'] );
                     // convert rrule to text
                     $message = ucfirst(
-                        $rrule->rrule_to_text( $_REQUEST['rrule'] )
+                        $rrule->rrule_to_text( $rrule_input )
                     );
                     //}
             }

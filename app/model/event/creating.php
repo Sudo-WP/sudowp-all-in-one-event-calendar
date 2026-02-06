@@ -71,11 +71,11 @@ class Ai1ec_Event_Creating extends Ai1ec_Base {
         $google_map       = isset( $_POST['ai1ec_google_map'] )       ? 1                                                                 : 0;
         $cost             = isset( $_POST['ai1ec_cost'] )             ? sanitize_text_field( $_POST['ai1ec_cost'] )                       : '';
         $is_free          = isset( $_POST['ai1ec_is_free'] )          ? (bool)$_POST['ai1ec_is_free']                                     : false;
-        $ticket_url       = isset( $_POST['ai1ec_ticket_url'] )       ? sanitize_text_field( $_POST['ai1ec_ticket_url'] )                 : '';
+        $ticket_url       = isset( $_POST['ai1ec_ticket_url'] )       ? esc_url_raw( $_POST['ai1ec_ticket_url'] )                         : '';
         $contact_name     = isset( $_POST['ai1ec_contact_name'] )     ? sanitize_text_field( $_POST['ai1ec_contact_name'] )               : '';
         $contact_phone    = isset( $_POST['ai1ec_contact_phone'] )    ? sanitize_text_field( $_POST['ai1ec_contact_phone'] )              : '';
-        $contact_email    = isset( $_POST['ai1ec_contact_email'] )    ? sanitize_text_field( $_POST['ai1ec_contact_email'] )              : '';
-        $contact_url      = isset( $_POST['ai1ec_contact_url'] )      ? sanitize_text_field( $_POST['ai1ec_contact_url'] )                : '';
+        $contact_email    = isset( $_POST['ai1ec_contact_email'] )    ? sanitize_email( $_POST['ai1ec_contact_email'] )                   : '';
+        $contact_url      = isset( $_POST['ai1ec_contact_url'] )      ? esc_url_raw( $_POST['ai1ec_contact_url'] )                        : '';
         $show_coordinates = isset( $_POST['ai1ec_input_coordinates'] )? 1                                                                 : 0;
         $longitude        = isset( $_POST['ai1ec_longitude'] )        ? sanitize_text_field( $_POST['ai1ec_longitude'] )                  : '';
         $latitude         = isset( $_POST['ai1ec_latitude'] )         ? sanitize_text_field( $_POST['ai1ec_latitude'] )                   : '';

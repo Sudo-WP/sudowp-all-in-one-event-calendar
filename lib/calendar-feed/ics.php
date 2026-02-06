@@ -62,7 +62,24 @@ class Ai1ecIcsConnectorPlugin extends Ai1ec_Connector_Plugin {
         // if no feed is provided, we are using ajax
         if ( ! $feed_id ) {
             $ajax    = true;
-            $feed_id = (int) $_REQUEST['ics_id'];
+            $feed_id = isset( $_REQUEST['ics_id'] ) ? (int) $_REQUEST['ics_id'] : 0;
+            
+            // Verify user has permission to manage feeds when called via AJAX
+            if ( ! current_user_can( 'manage_ai1ec_feeds' ) ) {
+                $output = array(
+                    'data' => array(
+                        'ics_id'  => $feed_id,
+                        'error'   => true,
+                        'message' => Ai1ec_I18n::__(
+                            'You do not have permission to manage feeds.'
+                        ),
+                    ),
+                );
+                $render_json = $this->_registry->get(
+                    'http.response.render.strategy.json'
+                );
+                return $render_json->render( $output );
+            }
         }
         $cron_name = $this->_import_lock_name( $feed_id );
         $output    = array(
