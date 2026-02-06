@@ -2,8 +2,8 @@
 /**
  * Plugin Name: SudoWP All-in-One Event Calendar (Legacy Rescue)
  * Plugin URI:  https://sudowp.com
- * Description: A community-maintained, modernization-focused fork of the All-in-One Event Calendar. Patched for WP 6.7+ and PHP 8.2.
- * Version:     3.0.2 (SudoWP Edition)
+ * Description: A community-maintained, modernization-focused fork of the All-in-One Event Calendar. Patched for WP 6.7+ and PHP 8.2. Security hardened following OWASP guidelines.
+ * Version:     3.0.3 (SudoWP Security Edition)
  * Author:      SudoWP (Original: Time.ly)
  * Author URI:  https://sudowp.com
  * Text Domain: all-in-one-event-calendar
@@ -17,7 +17,7 @@ if ( ! defined( 'ABSPATH' ) ) {
 }
 
 // Define the new SudoWP constants for internal reference
-define( 'SUDOWP_AI1EC_VERSION', '3.0.2' );
+define( 'SUDOWP_AI1EC_VERSION', '3.0.3' );
 define( 'SUDOWP_AI1EC_IS_RESCUE', true );
 
 /**
