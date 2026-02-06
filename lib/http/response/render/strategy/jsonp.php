@@ -34,8 +34,8 @@ class Ai1ec_Render_Strategy_Jsonp extends Ai1ec_Http_Response_Render_Strategy {
             if ( preg_match( '/^[a-zA-Z_$][a-zA-Z0-9_$]*$/', $callback ) ) {
                 $output = $callback . '(' . $output . ')';
             } else {
-                // Invalid callback name - log and return JSON only
-                error_log( 'SudoWP AI1EC Security: Invalid JSONP callback rejected: ' . esc_html( $callback ) );
+                // Invalid callback name - log without exposing the malicious input
+                error_log( 'SudoWP AI1EC Security: Invalid JSONP callback rejected (hash: ' . md5( $callback ) . ')' );
             }
         }
 

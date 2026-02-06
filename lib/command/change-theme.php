@@ -25,10 +25,14 @@ class Ai1ec_Command_Change_Theme extends Ai1ec_Command {
             $_GET['ai1ec_stylesheet']
         );
         
-        // Sanitize and validate theme paths to prevent path traversal
-        $theme_root = realpath( $_GET['ai1ec_theme_root'] );
-        $theme_dir  = realpath( $_GET['ai1ec_theme_dir'] );
-        $theme_url  = esc_url_raw( $_GET['ai1ec_theme_url'] );
+        // Sanitize inputs before using realpath() to prevent path traversal
+        $theme_root_input = isset( $_GET['ai1ec_theme_root'] ) ? sanitize_text_field( $_GET['ai1ec_theme_root'] ) : '';
+        $theme_dir_input  = isset( $_GET['ai1ec_theme_dir'] ) ? sanitize_text_field( $_GET['ai1ec_theme_dir'] ) : '';
+        $theme_url        = isset( $_GET['ai1ec_theme_url'] ) ? esc_url_raw( $_GET['ai1ec_theme_url'] ) : '';
+        
+        // Resolve real paths after sanitization
+        $theme_root = realpath( $theme_root_input );
+        $theme_dir  = realpath( $theme_dir_input );
         
         // Validate that paths are within the plugin directory
         $plugin_path = realpath( AI1EC_PATH );
