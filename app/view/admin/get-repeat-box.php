@@ -16,6 +16,7 @@ class Ai1ec_View_Admin_Get_repeat_Box extends Ai1ec_Base {
      * @return string
      **/
     public function get_repeat_box() {
+        check_ajax_referer( 'ai1ec_admin_nonce', 'nonce' );
         // Verify user has permission to edit events
         if ( ! current_user_can( 'edit_ai1ec_events' ) ) {
             $output = array(
@@ -166,6 +167,7 @@ class Ai1ec_View_Admin_Get_repeat_Box extends Ai1ec_Base {
      * @return void
      **/
     public function convert_rrule_to_text() {
+        check_ajax_referer( 'ai1ec_admin_nonce', 'nonce' );
         // Verify user has permission to edit events
         if ( ! current_user_can( 'edit_ai1ec_events' ) ) {
             $output = array(

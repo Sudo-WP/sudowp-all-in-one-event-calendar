@@ -598,9 +598,9 @@ class Ai1ecIcsConnectorPlugin extends Ai1ec_Connector_Plugin {
         );
 
         $entry = array(
-            'feed_url'             => $_REQUEST['feed_url'],
+            'feed_url'             => esc_url_raw( $_REQUEST['feed_url'] ),
             'feed_category'        => $feed_categories,
-            'feed_tags'            => $_REQUEST['feed_tags'],
+            'feed_tags'            => sanitize_text_field( $_REQUEST['feed_tags'] ),
             'comments_enabled'     => Ai1ec_Primitive_Int::db_bool(
                 $_REQUEST['comments_enabled']
             ),
@@ -675,7 +675,7 @@ class Ai1ecIcsConnectorPlugin extends Ai1ec_Connector_Plugin {
         }
 
         $args = array(
-            'feed_url'             => $_REQUEST['feed_url'],
+            'feed_url'             => esc_url_raw( $_REQUEST['feed_url'] ),
             'feed_name'            => $feed_name,
             'feed_events_uids'     => array(),
             'event_category'       => implode( ', ', $categories ),
@@ -683,9 +683,9 @@ class Ai1ecIcsConnectorPlugin extends Ai1ec_Connector_Plugin {
             'tags'                 => str_replace(
                 ',',
                 ', ',
-                $_REQUEST['feed_tags']
+                sanitize_text_field( $_REQUEST['feed_tags'] )
             ),
-            'tags_ids'             => $_REQUEST['feed_tags'],
+            'tags_ids'             => sanitize_text_field( $_REQUEST['feed_tags'] ),
             'feed_id'              => $feed_id,
             'comments_enabled'     => (bool) intval(
                 $_REQUEST['comments_enabled']
@@ -722,6 +722,10 @@ class Ai1ecIcsConnectorPlugin extends Ai1ec_Connector_Plugin {
      * Delete feeds and events
      */
     public function delete_feeds_and_events() {
+        check_ajax_referer( 'ai1ec_admin_nonce', 'nonce' );
+        if ( ! current_user_can( 'manage_options' ) ) {
+            wp_die( 'Unauthorized' );
+        }
         $remove_events = $_POST['remove_events'] === 'true' ? true : false;
         $ics_id = isset( $_POST['ics_id'] ) ? (int) $_REQUEST['ics_id'] : 0;
         if ( $remove_events ) {
@@ -854,9 +858,9 @@ class Ai1ecIcsConnectorPlugin extends Ai1ec_Connector_Plugin {
             wp_die( Ai1ec_I18n::__( 'Oh, submission was not accepted.' ) );
         }
 
-        $feed_id       = $_POST['ai1ec_feed_id'];
-        $event_id      = $_POST['ai1ec_event_id'];
-        $feed_url      = $_POST['ai1ec_feed_url'];
+        $feed_id       = sanitize_text_field( $_POST['ai1ec_feed_id'] );
+        $event_id      = sanitize_text_field( $_POST['ai1ec_event_id'] );
+        $feed_url      = esc_url_raw( $_POST['ai1ec_feed_url'] );
 
         $api_feed      = $this->_api_feed;
 
@@ -878,7 +882,7 @@ class Ai1ecIcsConnectorPlugin extends Ai1ec_Connector_Plugin {
             return $json_strategy->render( array( 'data' => $output ) );
         }
 
-        $sql        = "SELECT COUNT(*) FROM $table_name WHERE feed_name = '" . $feed_id . "'";
+        $sql        = $db->prepare( "SELECT COUNT(*) FROM $table_name WHERE feed_name = %s", $feed_id );
         $feed_count = $db->get_var( $sql );
 
         // Not imported yet
@@ -923,6 +927,10 @@ class Ai1ecIcsConnectorPlugin extends Ai1ec_Connector_Plugin {
      * @return String JSON output
      **/
     public function delete_individual_event_subscription() {
+        check_ajax_referer( 'ai1ec_admin_nonce', 'nonce' );
+        if ( ! current_user_can( 'manage_options' ) ) {
+            wp_die( 'Unauthorized' );
+        }
         $db             = $this->_registry->get( 'dbi.dbi' );
 
         $feed_id        = $_POST['ai1ec_feed_id'];

@@ -16,6 +16,10 @@ class Ai1ec_View_Admin_Get_Tax_Box extends Ai1ec_Base {
      * @return string
      **/
     public function get_tax_box() {
+        check_ajax_referer( 'ai1ec_admin_nonce', 'nonce' );
+        if ( ! current_user_can( 'manage_options' ) ) {
+            wp_die( 'Unauthorized' );
+        }
         $api      = $this->_registry->get( 'model.api.api-ticketing' );
         $post_id  = $_POST['ai1ec_event_id'];
         $modal    = $api->get_tax_options_modal( $post_id );

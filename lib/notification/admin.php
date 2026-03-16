@@ -156,6 +156,10 @@ class Ai1ec_Notification_Admin extends Ai1ec_Notification {
      *
      */
     public function dismiss_notice() {
+        check_ajax_referer( 'ai1ec_admin_nonce', 'nonce' );
+        if ( ! current_user_can( 'manage_options' ) ) {
+            wp_die( 'Unauthorized' );
+        }
         $key = $_POST['key'];
         foreach ( $this->_message_list as $dest ) {
             if ( isset( $this->_message_list[$dest][$key] ) ) {

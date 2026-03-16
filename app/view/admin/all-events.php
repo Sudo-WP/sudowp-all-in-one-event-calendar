@@ -205,6 +205,10 @@ class Ai1ec_View_Admin_All_Events extends Ai1ec_Base {
      * Get ticket details by Event id.
      */
     public function show_ticket_details() {
+        check_ajax_referer( 'ai1ec_admin_nonce', 'nonce' );
+        if ( ! current_user_can( 'manage_options' ) ) {
+            wp_die( 'Unauthorized' );
+        }
         $post_id = $_POST['ai1ec_event_id'];
         $api     = $this->_registry->get( 'model.api.api-ticketing' );
         if ( $api->is_ticket_event_from_another_account( $post_id ) )  {
@@ -226,6 +230,10 @@ class Ai1ec_View_Admin_All_Events extends Ai1ec_Base {
      * Get attendees list.
      */
     public function show_attendees() {
+        check_ajax_referer( 'ai1ec_admin_nonce', 'nonce' );
+        if ( ! current_user_can( 'manage_options' ) ) {
+            wp_die( 'Unauthorized' );
+        }
         $post_id  = $_POST['ai1ec_event_id'];
         $api      = $this->_registry->get( 'model.api.api-ticketing' );
         $tickets  = $api->get_tickets( $post_id );

@@ -425,7 +425,7 @@ class Ai1ec_Event extends Ai1ec_Base {
                 ':' === $value[1] || ';' === $value[1]
             )
         ) {
-            $test_value = unserialize( $value );
+            $test_value = unserialize( $value, ['allowed_classes' => false] );
         }
         $cost = $is_free = NULL;
         if ( false === $test_value ) {

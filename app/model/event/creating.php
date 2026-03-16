@@ -95,7 +95,7 @@ class Ai1ec_Event_Creating extends Ai1ec_Base {
             isset( $_POST['ai1ec_repeat'] ) &&
             ! empty( $_POST['ai1ec_repeat'] )
         ) {
-            $rrule = $_POST['ai1ec_rrule'];
+            $rrule = sanitize_text_field( $_POST['ai1ec_rrule'] );
         }
 
         // add manual dates
@@ -103,13 +103,13 @@ class Ai1ec_Event_Creating extends Ai1ec_Base {
             isset( $_POST['ai1ec_exdate'] ) &&
             ! empty( $_POST['ai1ec_exdate'] )
         ) {
-            $exdate = $_POST['ai1ec_exdate'];
+            $exdate = sanitize_text_field( $_POST['ai1ec_exdate'] );
         }
         if (
             isset( $_POST['ai1ec_rdate'] ) &&
             ! empty( $_POST['ai1ec_rdate'] )
         ) {
-            $rdate = $_POST['ai1ec_rdate'];
+            $rdate = sanitize_text_field( $_POST['ai1ec_rdate'] );
         }
 
         // if exrule is set, convert it from local to UTC time
@@ -119,7 +119,7 @@ class Ai1ec_Event_Creating extends Ai1ec_Base {
             ( null !== $rrule || null !== $rdate ) // no point for exclusion, if repetition is not set
         ) {
             $exrule = $this->_registry->get( 'recurrence.rule' )->merge_exrule(
-                $_POST['ai1ec_exrule'],
+                sanitize_text_field( $_POST['ai1ec_exrule'] ),
                 $rrule
             );
         }
