@@ -4,7 +4,7 @@ Original Authors: Timely (Time.ly)
 Tags: calendar, events, sudowp, legacy, rescue, php8, security
 Requires at least: 6.0
 Tested up to: 6.7
-Stable tag: 3.0.3
+Stable tag: 3.0.4
 License: GPLv2 or later
 License URI: http://www.gnu.org/licenses/gpl-2.0.html
 
@@ -40,6 +40,12 @@ For detailed security information, see the SECURITY.md file in the plugin direct
 4. **Activate:** Activate "SudoWP All-in-One Event Calendar".
 
 == Changelog ==
+
+= 3.0.4 (SudoWP Security Audit) - March 2026 =
+* **SECURITY:** SQL injection fix using wpdb prepare on all raw queries.
+* **SECURITY:** Unsafe unserialize replaced with safe deserialization (allowed_classes restriction).
+* **SECURITY:** Added nonce and capability checks on 7 AJAX handlers.
+* **SECURITY:** Input sanitization on recurrence fields and feed URLs.
 
 = 3.0.3 (SudoWP Security Edition) - February 2026 =
 * **SECURITY:** Fixed JSONP callback injection vulnerability (XSS) - Added strict whitelist validation
