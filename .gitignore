@@ -7,3 +7,8 @@ structure.txt
 .DS_Store
 .idea/
 .vscode/
+
+# Local guidance, never commit
+CLAUDE.md
+HANDOFF.md
+.claude/
