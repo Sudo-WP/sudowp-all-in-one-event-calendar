@@ -49,10 +49,12 @@ To report security issues, please email: security@sudowp.com
 
 ## Installation
 
-1.  Download the repository.
+1.  Download the release zip: [sudowp-all-in-one-event-calendar.zip](https://github.com/Sudo-WP/sudowp-all-in-one-event-calendar/releases/latest/download/sudowp-all-in-one-event-calendar.zip). This link always points to the latest release.
 2.  Deactivate the original "All-in-One Event Calendar".
-3.  Upload `sudowp-all-in-one-event-calendar` to your plugins directory.
+3.  In WordPress, go to Plugins > Add New > Upload Plugin, choose the zip and install it. The plugin folder will be `sudowp-all-in-one-event-calendar`.
 4.  Activate.
+
+Do not use GitHub's "Code > Download ZIP" button. That archive is a copy of the source repository, not a release: it includes development files such as the test suite, and its folder is named `sudowp-all-in-one-event-calendar-main`.
 
 **Disclaimer:** This is a Maintenance Fork. We are NOT adding new features. Our goal is to keep the existing calendar functionality working securely on modern servers.
 
