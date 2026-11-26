@@ -387,10 +387,13 @@ class Ai1ec_Exception_Handler {
      * @return void Method does not return
      */
     public function render_admin_notice() {
-        $redirect_url = esc_url( add_query_arg(
-            self::DB_REACTIVATE_PLUGIN,
-            'true',
-            get_admin_url()
+        $redirect_url = esc_url( wp_nonce_url(
+            add_query_arg(
+                self::DB_REACTIVATE_PLUGIN,
+                'true',
+                get_admin_url()
+            ),
+            self::DB_REACTIVATE_PLUGIN
         ) );
         $label = __(
             'All-in-One Event Calendar has been disabled due to an error:',
