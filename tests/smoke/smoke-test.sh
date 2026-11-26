@@ -9,7 +9,17 @@
 #   - the "Try reactivating plugin" link (?ai1ec_reactivate_plugin) clears a
 #     soft-disable only for a user with activate_plugins AND a valid nonce:
 #     anonymous and nonce-less admin requests leave the plugin disabled
+#   - admin AJAX nonce: ai1ec_admin_nonce is issued in the backend
+#     ai1ec_config (and only there); with that nonce an administrator's
+#     ai1ec_rrule_to_text and ai1ec_dismiss_notice succeed, without it they
+#     return -1; a subscriber is refused by ai1ec_feeds_page_post,
+#     ai1ec_search_events and ai1ec_rescan_cache; the nonce script is
+#     enqueued on the event editor screen
 #   - debug.log contains no PHP fatal or parse errors and no uncaught exceptions
+#
+# Once per run, before the sites, a node test checks the prefilter in
+# public/js/sudowp-admin-ajax-nonce.js against the requests the plugin's
+# admin scripts send (needs node; reported as FAIL when node is missing).
 #
 # The debug.log summary leaves out WP-CLI's own deprecation messages from
 # inside its phar (php-cli-tools Colors.php); every plugin message is kept.
@@ -96,6 +106,53 @@ assert() { # assert <label> <expected> <actual>
 	fi
 }
 
+# ---- Admin AJAX nonce script (node) ------------------------------------------
+# Runs the real script in a sandbox with stand-ins for the require.js loader
+# (timely.require) and the bundled jQuery, then feeds the prefilter the
+# request options jQuery builds for the plugin's own admin calls.
+echo
+echo "=== Admin AJAX nonce script (node)"
+NONCE_JS="$SRC/public/js/sudowp-admin-ajax-nonce.js"
+if ! command -v node >/dev/null 2>&1; then
+	assert "node available for the prefilter test" "yes" "no"
+elif [ ! -f "$NONCE_JS" ]; then
+	assert "public/js/sudowp-admin-ajax-nonce.js exists" "yes" "no"
+else
+	node - "$NONCE_JS" <<'JSEOF' || FAILED=1
+const fs = require( 'fs' ), vm = require( 'vm' );
+const code = fs.readFileSync( process.argv[2], 'utf8' );
+let failed = 0;
+const check = ( label, ok ) => { console.log( '  ' + ( ok ? 'PASS' : 'FAIL' ) + '  ' + label ); if ( ! ok ) failed = 1; };
+function load( config ) {
+	const reg = { deps: null, filters: [] };
+	const $ = { ajaxPrefilter: ( f ) => reg.filters.push( f ) };
+	const sandbox = { timely: { require: ( deps, cb ) => { reg.deps = deps; cb( config, $ ); } } };
+	vm.runInNewContext( code, sandbox );
+	return reg;
+}
+const AJAX = 'http://localhost/wp-admin/admin-ajax.php';
+const reg = load( { ai1ec_admin_nonce: 'N0nce' } );
+check( 'prefilter registered on jquery_timely using ai1ec_config',
+	JSON.stringify( reg.deps ) === '["ai1ec_config","jquery_timely"]' && reg.filters.length === 1 );
+const run = ( opts ) => { reg.filters[0]( opts ); return opts.data; };
+check( 'ai1ec_rrule_to_text POST gets the nonce',
+	run( { url: AJAX, data: 'action=ai1ec_rrule_to_text&rrule=FREQ%3DDAILY%3B' } ) === 'action=ai1ec_rrule_to_text&rrule=FREQ%3DDAILY%3B&nonce=N0nce' );
+check( 'ai1ec_dismiss_notice POST gets the nonce',
+	run( { url: AJAX, data: 'action=ai1ec_dismiss_notice&key=abc' } ) === 'action=ai1ec_dismiss_notice&key=abc&nonce=N0nce' );
+check( 'ai1ec_add_ics keeps its own feeds nonce',
+	run( { url: AJAX, data: 'action=ai1ec_add_ics&nonce=FEED&feed_url=x' } ) === 'action=ai1ec_add_ics&nonce=FEED&feed_url=x' );
+check( 'GET with the action in the URL gets the nonce',
+	run( { url: AJAX + '?action=ai1ec_rescan_cache', data: undefined } ) === 'nonce=N0nce' );
+check( 'non-plugin admin-ajax action left unchanged',
+	run( { url: AJAX, data: 'action=heartbeat&x=1' } ) === 'action=heartbeat&x=1' );
+check( 'request to another URL left unchanged',
+	run( { url: 'http://example.invalid/api', data: 'action=ai1ec_x' } ) === 'action=ai1ec_x' );
+check( 'no prefilter when ai1ec_config has no nonce',
+	load( {} ).filters.length === 0 );
+process.exit( failed );
+JSEOF
+fi
+
 N=0
 for FOLDER in "${FOLDERS[@]}"; do
 	N=$((N + 1))
@@ -156,6 +213,51 @@ for FOLDER in "${FOLDERS[@]}"; do
 	wpc --path="$SITE" --user=admin --exec="$REACT_GET" \
 		eval '$_REQUEST["_wpnonce"] = wp_create_nonce( "ai1ec_reactivate_plugin" ); do_action( "admin_init" );' >/dev/null 2>&1 || true
 	assert "reactivation link works for admin with valid nonce" "unset" "$(opt_state)"
+
+	# --- Admin AJAX nonce ----------------------------------------------------
+	# The nonce is read from ai1ec_config exactly as the backend script load
+	# builds it (?is_backend=true). WP_ADMIN and DOING_AJAX are defined before
+	# WordPress loads, as admin-ajax.php does, so the plugin registers its
+	# wp_ajax_ handlers.
+	wpc --path="$SITE" user create subscriber subscriber@example.invalid --role=subscriber --user_pass=smoke --quiet >/dev/null 2>&1 || true
+	AJAX_CTX='define( "WP_ADMIN", true ); define( "DOING_AJAX", true );'
+	CFG_NONCE='$ai1ec_js = apply_filters( "ai1ec_registry", false )->get( "controller.javascript" ); $_GET["is_backend"] = "true"; $ai1ec_cfg = $ai1ec_js->get_translation_data(); unset( $_GET["is_backend"] ); $ai1ec_nonce = isset( $ai1ec_cfg["ai1ec_admin_nonce"] ) ? $ai1ec_cfg["ai1ec_admin_nonce"] : "";'
+	# ajax_call <user> <action> <php array of POST fields> <with-nonce: yes|no>
+	ajax_call() {
+		wpc --path="$SITE" --user="$1" --exec="$AJAX_CTX" eval "$CFG_NONCE \$_POST = array_merge( array( 'action' => '$2' ), $3 ); if ( 'yes' === '$4' ) { \$_POST['nonce'] = \$ai1ec_nonce; } \$_REQUEST = \$_POST; do_action( 'wp_ajax_$2' ); echo '[completed]';" 2>/dev/null | tr -d '\n' | tail -c 400
+	}
+	cron_freq() { wpc --path="$SITE" eval 'echo apply_filters( "ai1ec_registry", false )->get( "model.settings" )->get( "ics_cron_freq" );' 2>/dev/null; }
+
+	ISSUED="$(wpc --path="$SITE" --user=admin --exec="$AJAX_CTX" eval "$CFG_NONCE echo ( '' !== \$ai1ec_nonce && wp_verify_nonce( \$ai1ec_nonce, 'ai1ec_admin_nonce' ) ) ? 'issued' : 'missing';" 2>/dev/null)"
+	assert "ai1ec_admin_nonce issued in the backend ai1ec_config" "issued" "$ISSUED"
+
+	FRONT="$(wpc --path="$SITE" --user=admin eval '$c = apply_filters( "ai1ec_registry", false )->get( "controller.javascript" )->get_translation_data(); echo isset( $c["ai1ec_admin_nonce"] ) ? "present" : "absent";' 2>/dev/null)"
+	assert "ai1ec_admin_nonce absent from the non-backend config (JS cache, widget)" "absent" "$FRONT"
+
+	OUT="$(ajax_call admin ai1ec_rrule_to_text "array( 'rrule' => 'FREQ=DAILY;' )" yes)"
+	assert "admin: ai1ec_rrule_to_text succeeds with the issued nonce" "ok" "$(echo "$OUT" | grep -q '"message":"Daily' && echo ok || echo "$OUT")"
+	OUT="$(ajax_call admin ai1ec_rrule_to_text "array( 'rrule' => 'FREQ=DAILY;' )" no)"
+	assert "admin: ai1ec_rrule_to_text returns -1 without the nonce" "-1" "$OUT"
+	OUT="$(ajax_call admin ai1ec_dismiss_notice "array( 'key' => 'smoke' )" yes)"
+	assert "admin: ai1ec_dismiss_notice succeeds with the issued nonce" "[completed]" "$OUT"
+	OUT="$(ajax_call admin ai1ec_dismiss_notice "array( 'key' => 'smoke' )" no)"
+	assert "admin: ai1ec_dismiss_notice returns -1 without the nonce" "-1" "$OUT"
+
+	BEFORE="$(cron_freq)"
+	OUT="$(ajax_call subscriber ai1ec_feeds_page_post "array( 'cron_freq' => 'smoke-subscriber' )" yes)"
+	assert "subscriber: ai1ec_feeds_page_post refused" "Unauthorized" "$OUT"
+	assert "subscriber: feed import frequency unchanged" "$BEFORE" "$(cron_freq)"
+	OUT="$(ajax_call subscriber ai1ec_search_events "array( 'term' => 'x' )" yes)"
+	assert "subscriber: ai1ec_search_events refused" "Unauthorized" "$OUT"
+	OUT="$(ajax_call subscriber ai1ec_rescan_cache "array()" yes)"
+	assert "subscriber: ai1ec_rescan_cache refused" "Unauthorized" "$OUT"
+	OUT="$(ajax_call admin ai1ec_feeds_page_post "array( 'cron_freq' => 'twicedaily' )" yes)"
+	assert "admin: ai1ec_feeds_page_post saves the import frequency" "twicedaily" "$(cron_freq)"
+	ajax_call admin ai1ec_feeds_page_post "array( 'cron_freq' => '$BEFORE' )" yes >/dev/null
+
+	ENQ="$(wpc --path="$SITE" --user=admin --exec='define( "WP_ADMIN", true ); $GLOBALS["pagenow"] = "post-new.php"; $_GET["post_type"] = "ai1ec_event";' eval 'require_once ABSPATH . "wp-admin/includes/admin.php"; set_current_screen( "ai1ec_event" ); do_action( "admin_enqueue_scripts", "post-new.php" ); $s = wp_scripts()->query( "sudowp_ai1ec_admin_ajax_nonce" ); echo ( wp_script_is( "sudowp_ai1ec_admin_ajax_nonce", "enqueued" ) && $s && in_array( "ai1ec_requirejs", $s->deps, true ) && false !== strpos( $s->src, "/public/js/sudowp-admin-ajax-nonce.js" ) ) ? "enqueued" : "missing";' 2>/dev/null)"
+	assert "nonce script enqueued on the event editor screen (after ai1ec_requirejs)" "enqueued" "$ENQ"
+	assert "nonce script file present in the installed plugin" "yes" "$( [ -f "$SITE/wp-content/plugins/$FOLDER/public/js/sudowp-admin-ajax-nonce.js" ] && echo yes || echo no )"
 
 	LOG="$SITE/wp-content/debug.log"
 	FATAL_RE='PHP (Fatal|Parse) error|Uncaught'
