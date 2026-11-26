@@ -17,6 +17,10 @@ class Ai1ec_Twig_Cache extends Ai1ec_Base {
      * @return void
      */
     public function rescan() {
+        check_ajax_referer( 'ai1ec_admin_nonce', 'nonce' );
+        if ( ! current_user_can( 'manage_options' ) ) {
+            wp_die( 'Unauthorized' );
+        }
         $cache_dir = $this->_registry->get( 'theme.loader' )
                 ->get_cache_dir( true );
         $render_json    = $this->_registry->get(

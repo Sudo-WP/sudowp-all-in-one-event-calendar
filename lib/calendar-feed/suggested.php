@@ -79,6 +79,10 @@ class Ai1ecSuggestedConnectorPlugin extends Ai1ec_Connector_Plugin {
      * Events search
      */
     public function search_events() {
+        check_ajax_referer( 'ai1ec_admin_nonce', 'nonce' );
+        if ( ! current_user_can( 'manage_ai1ec_feeds' ) ) {
+            wp_die( 'Unauthorized' );
+        }
         $api           = $this->_registry->get( 'model.api.api-feeds' );
         $events        = $api->get_suggested_events();
         $imported      = $api->get_feed_subscriptions();

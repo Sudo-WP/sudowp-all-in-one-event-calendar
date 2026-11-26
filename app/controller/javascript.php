@@ -13,6 +13,9 @@ class Ai1ec_Javascript_Controller {
     // The js handle used when enqueueing
     const JS_HANDLE = 'ai1ec_requirejs';
 
+    // Handle of the script that sends ai1ec_admin_nonce with admin AJAX calls.
+    const ADMIN_AJAX_NONCE_HANDLE = 'sudowp_ai1ec_admin_ajax_nonce';
+
     // The namespace for require.js functions
     const REQUIRE_NAMESPACE = 'timely';
 
@@ -380,6 +383,16 @@ class Ai1ec_Javascript_Controller {
         foreach ($script_to_load as $value) {
             $this->add_link_to_render_js( $value, true );
         }
+        // Appends ai1ec_admin_nonce to the plugin's admin AJAX requests.
+        // Depends on the require.js bundle, which defines jquery_timely and
+        // ai1ec_config.
+        wp_enqueue_script(
+            self::ADMIN_AJAX_NONCE_HANDLE,
+            AI1EC_URL . '/public/js/sudowp-admin-ajax-nonce.js',
+            array( self::JS_HANDLE ),
+            SUDOWP_AI1EC_VERSION,
+            true
+        );
     }
 
     /**
@@ -591,6 +604,17 @@ class Ai1ec_Javascript_Controller {
             'show_at_least_six_hours'        => __( 'For week and day view, you must select an interval of at least 6 hours.', AI1EC_PLUGIN_NAME ),
             'ai1ec_permalinks_enabled'       => $application->get( 'permalinks_enabled' ),
         );
+        // Nonce for the admin AJAX handlers, sent by
+        // public/js/sudowp-admin-ajax-nonce.js. Issued only in the backend
+        // script load (never written to the public JS cache file, never part
+        // of the embeddable widget) and only to logged-in users.
+        if (
+            isset( $_GET[self::IS_BACKEND_PARAMETER] ) &&
+            self::TRUE_PARAM === $_GET[self::IS_BACKEND_PARAMETER] &&
+            is_user_logged_in()
+        ) {
+            $data['ai1ec_admin_nonce'] = wp_create_nonce( 'ai1ec_admin_nonce' );
+        }
         return apply_filters( 'ai1ec_js_translations', $data );
     }
 

@@ -63,7 +63,8 @@ class Ai1ecIcsConnectorPlugin extends Ai1ec_Connector_Plugin {
         if ( ! $feed_id ) {
             $ajax    = true;
             $feed_id = isset( $_REQUEST['ics_id'] ) ? (int) $_REQUEST['ics_id'] : 0;
-            
+
+            check_ajax_referer( 'ai1ec_admin_nonce', 'nonce' );
             // Verify user has permission to manage feeds when called via AJAX
             if ( ! current_user_can( 'manage_ai1ec_feeds' ) ) {
                 $output = array(
@@ -355,6 +356,22 @@ class Ai1ecIcsConnectorPlugin extends Ai1ec_Connector_Plugin {
         if ( isset( $_POST['cron_freq'] ) ) {
             $settings->set( 'ics_cron_freq', $_REQUEST['cron_freq'] );
         }
+    }
+
+    /**
+     * AJAX entry point for the feeds page (wp_ajax_ai1ec_feeds_page_post).
+     *
+     * handle_feeds_page_post() is also called when the feeds page itself is
+     * submitted, so the AJAX nonce and capability checks live here.
+     *
+     * @return void
+     */
+    public function ajax_handle_feeds_page_post() {
+        check_ajax_referer( 'ai1ec_admin_nonce', 'nonce' );
+        if ( ! current_user_can( 'manage_ai1ec_feeds' ) ) {
+            wp_die( 'Unauthorized' );
+        }
+        $this->handle_feeds_page_post();
     }
 
     /**
@@ -854,6 +871,7 @@ class Ai1ecIcsConnectorPlugin extends Ai1ec_Connector_Plugin {
      *
      */
     public function add_discover_events_feed_subscription() {
+        check_ajax_referer( 'ai1ec_admin_nonce', 'nonce' );
         if ( ! current_user_can( 'manage_ai1ec_feeds' ) ) {
             wp_die( Ai1ec_I18n::__( 'Oh, submission was not accepted.' ) );
         }
