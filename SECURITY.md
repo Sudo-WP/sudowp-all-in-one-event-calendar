@@ -149,10 +149,16 @@ When using this plugin:
 
 ## Version History
 
-### v3.0.4 (SudoWP Security Edition)
-- Fixed SQL injection (wpdb prepare on raw queries)
-- Replaced unsafe unserialize (allowed_classes restriction)
-- Added nonce and capability checks on 7 AJAX handlers
+### v3.0.5 (SudoWP Security Edition)
+- 3.0.4 was tagged but never released; its fixes ship for the first time in 3.0.5
+- Issued the admin AJAX nonce (ai1ec_admin_nonce) that the 3.0.4 checks expected, so the protected admin AJAX actions work again
+- Added a capability and a nonce check to ai1ec_feeds_page_post and ai1ec_search_events (manage_ai1ec_feeds) and ai1ec_rescan_cache (manage_options); before, any logged-in user could use them
+- Added a nonce check to ai1ec_import_suggested_event and ai1ec_update_ics, which already checked a capability
+
+### v3.0.4 (tagged, not released)
+- Fixed an SQL injection in the suggested-event import handler (feed ID bound with $wpdb->prepare())
+- Unserialised the stored event cost value with allowed_classes => false
+- Added nonce checks to 8 admin AJAX handlers and capability checks to 6 of them; the nonce was never issued, so these handlers rejected every request until 3.0.5
 - Sanitized recurrence fields and feed URLs
 - Protected the "Try reactivating plugin" link (?ai1ec_reactivate_plugin) with the activate_plugins capability and a nonce; before, any visitor, logged in or not, could re-enable the plugin after it had disabled itself because of an error
 - Next release hardening: narrow or remove the request-wide unserialize_callback_func = spl_autoload_call setting in the main plugin file

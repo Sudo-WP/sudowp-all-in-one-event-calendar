@@ -20,7 +20,7 @@ The original plugin was closed on WordPress.org to force a migration to a SaaS p
 * **Issue:** Releases 3.0.2 and 3.0.3 activated but never started the calendar. The `[ai1ec]` shortcode and the event post type were missing.
 * **Fix:** Restored the original Timely startup sequence in the main plugin file. Drop-in update: no option, post type, taxonomy, shortcode or database changes.
 
-### 2. Security Hardening (v3.0.3 and v3.0.4)
+### 2. Security Hardening (v3.0.3 to v3.0.5)
 * **XSS Prevention:** Fixed JSONP callback injection vulnerability with strict whitelist validation
 * **Path Traversal:** Secured theme switching with directory validation
 * **Input Validation:** All user inputs sanitized following OWASP guidelines
@@ -60,10 +60,12 @@ To report security issues, please email: security@sudowp.com
 
 See [readme.txt](readme.txt) for detailed changelog.
 
-**Latest Version: 3.0.4 (Security Edition)**
-- Critical fix: 3.0.2 and 3.0.3 did not boot (missing `[ai1ec]` shortcode and event post type); the original startup sequence is restored
-- Security audit fixes: SQL injection, unsafe unserialize, nonce and capability checks on AJAX handlers
-- The "Try reactivating plugin" link now requires the `activate_plugins` capability and a valid nonce; before, any visitor could trigger it
+**Latest Version: 3.0.5 (Security Edition)**
+- 3.0.4 was tagged but never released; its changes ship for the first time in 3.0.5
+- Critical fix: the event editor's Repeat dialog and the other admin AJAX actions work again (3.0.4 checked a nonce it never issued)
+- Every admin AJAX action now checks a nonce and a capability; subscribers can no longer change the feed import frequency, search suggested events or rescan the template cache
+- Critical fix (from 3.0.4): 3.0.2 and 3.0.3 did not boot (missing `[ai1ec]` shortcode and event post type); the original startup sequence is restored
+- From 3.0.4: an SQL injection fix in the suggested-event import, a restricted unserialize of the stored event cost, and the "Try reactivating plugin" link now requires the `activate_plugins` capability and a valid nonce
 
 ## Next Release
 - **Future fatal:** `lib/exception/handler.php:93` uses the `E_STRICT` constant, deprecated since PHP 8.4. When PHP removes it, the plugin will stop with a fatal error while it starts.
