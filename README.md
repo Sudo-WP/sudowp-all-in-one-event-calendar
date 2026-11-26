@@ -16,7 +16,11 @@ The original plugin was closed on WordPress.org to force a migration to a SaaS p
 
 ## Patches & Improvements
 
-### 1. Security Hardening (v3.0.3)
+### 1. Boot Fix (v3.0.4)
+* **Issue:** Releases 3.0.2 and 3.0.3 activated but never started the calendar. The `[ai1ec]` shortcode and the event post type were missing.
+* **Fix:** Restored the original Timely startup sequence in the main plugin file. Drop-in update: no option, post type, taxonomy, shortcode or database changes.
+
+### 2. Security Hardening (v3.0.3 and v3.0.4)
 * **XSS Prevention:** Fixed JSONP callback injection vulnerability with strict whitelist validation
 * **Path Traversal:** Secured theme switching with directory validation
 * **Input Validation:** All user inputs sanitized following OWASP guidelines
@@ -24,13 +28,13 @@ The original plugin was closed on WordPress.org to force a migration to a SaaS p
 * **PHP 8 Compatibility:** Replaced deprecated `create_function()`
 * **Documentation:** Added comprehensive [SECURITY.md](SECURITY.md) policy
 
-### 2. WordPress 6.7 Compatibility
+### 3. WordPress 6.7 Compatibility
 * **Issue:** The original plugin loaded translations too early, triggering PHP notices in the admin panel.
 * **Fix:** We deferred `load_plugin_textdomain` to the `init` hook, complying with modern WP standards.
+* **Remaining:** One `_load_textdomain_just_in_time` notice is still logged, because setting labels are translated during startup (`app/model/settings.php`). Scheduled for the next release.
 
-### 3. Modernization
+### 4. Modernization
 * **Strict Typing:** The main entry point now enforces `declare(strict_types=1);`.
-* **Bootloader:** Refactored the initialization logic to be more robust.
 * **Security:** Follow OWASP Top 10 and WordPress security best practices.
 
 ## Security
@@ -56,10 +60,17 @@ To report security issues, please email: security@sudowp.com
 
 See [readme.txt](readme.txt) for detailed changelog.
 
-**Latest Version: 3.0.3 (Security Edition)**
-- Fixed multiple security vulnerabilities
-- Enhanced input validation and authorization
-- PHP 8.0+ compatibility improvements
+**Latest Version: 3.0.4 (Security Edition)**
+- Critical fix: 3.0.2 and 3.0.3 did not boot (missing `[ai1ec]` shortcode and event post type); the original startup sequence is restored
+- Security audit fixes: SQL injection, unsafe unserialize, nonce and capability checks on AJAX handlers
+- The "Try reactivating plugin" link now requires the `activate_plugins` capability and a valid nonce; before, any visitor could trigger it
+
+## Next Release
+- **Future fatal:** `lib/exception/handler.php:93` uses the `E_STRICT` constant, deprecated since PHP 8.4. When PHP removes it, the plugin will stop with a fatal error while it starts.
+- PHP 8.4+ deprecations: implicitly nullable parameters in `lib/bootstrap/loader.php:123`, `lib/theme/loader.php:242`, `lib/less/lessphp.php:105`, `lib/css/frontend.php:222` and `lib/database/helper.php:296`; `case ...;` statements in `vendor/lessphp/lessc.inc.php:748` and `lib/iCal/iCalcnv-3.0/iCalcnv.class.php:1179` and `:1771`
+- PHP 8.2+ deprecations logged in debug.log: dynamic properties `Ai1ec_Scheduling_Utility::$_updated`, `Ai1ec_Http_Request::$_registry`, `lessc::$formatterName`, and `${var}` interpolation in `vendor/lessphp/lessc.inc.php`
+- The remaining `_load_textdomain_just_in_time` notice from `app/model/settings.php`
+- **Hardening:** the main plugin file sets `unserialize_callback_func` to `spl_autoload_call` for the whole request, so any `unserialize()` call on the site, including WordPress core and other plugins, can load this plugin's classes. To be narrowed or removed.
 
 ---
 *Forked and maintained by the SudoWP Project.*

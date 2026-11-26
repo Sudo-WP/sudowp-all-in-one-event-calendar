@@ -149,7 +149,16 @@ When using this plugin:
 
 ## Version History
 
-### v3.0.2 (SudoWP Edition) - Security Hardening
+### v3.0.4 (SudoWP Security Edition)
+- Fixed SQL injection (wpdb prepare on raw queries)
+- Replaced unsafe unserialize (allowed_classes restriction)
+- Added nonce and capability checks on 7 AJAX handlers
+- Sanitized recurrence fields and feed URLs
+- Protected the "Try reactivating plugin" link (?ai1ec_reactivate_plugin) with the activate_plugins capability and a nonce; before, any visitor, logged in or not, could re-enable the plugin after it had disabled itself because of an error
+- Next release hardening: narrow or remove the request-wide unserialize_callback_func = spl_autoload_call setting in the main plugin file
+- Restored the plugin's startup sequence: 3.0.2 and 3.0.3 did not boot, so none of their fixes were active on live sites
+
+### v3.0.3 (SudoWP Security Edition) - Security Hardening
 - Fixed JSONP callback injection (XSS)
 - Fixed path traversal vulnerability
 - Enhanced input validation and sanitization
