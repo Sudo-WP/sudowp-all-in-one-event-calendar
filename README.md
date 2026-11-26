@@ -69,12 +69,19 @@ See [readme.txt](readme.txt) for detailed changelog.
 - Critical fix (from 3.0.4): 3.0.2 and 3.0.3 did not boot (missing `[ai1ec]` shortcode and event post type); the original startup sequence is restored
 - From 3.0.4: an SQL injection fix in the suggested-event import, a restricted unserialize of the stored event cost, and the "Try reactivating plugin" link now requires the `activate_plugins` capability and a valid nonce
 
-## Next Release
+## 3.0.6 Backlog
 - **Future fatal:** `lib/exception/handler.php:93` uses the `E_STRICT` constant, deprecated since PHP 8.4. When PHP removes it, the plugin will stop with a fatal error while it starts.
 - PHP 8.4+ deprecations: implicitly nullable parameters in `lib/bootstrap/loader.php:123`, `lib/theme/loader.php:242`, `lib/less/lessphp.php:105`, `lib/css/frontend.php:222` and `lib/database/helper.php:296`; `case ...;` statements in `vendor/lessphp/lessc.inc.php:748` and `lib/iCal/iCalcnv-3.0/iCalcnv.class.php:1179` and `:1771`
 - PHP 8.2+ deprecations logged in debug.log: dynamic properties `Ai1ec_Scheduling_Utility::$_updated`, `Ai1ec_Http_Request::$_registry`, `lessc::$formatterName`, and `${var}` interpolation in `vendor/lessphp/lessc.inc.php`
 - The remaining `_load_textdomain_just_in_time` notice from `app/model/settings.php`
 - **Hardening:** the main plugin file sets `unserialize_callback_func` to `spl_autoload_call` for the whole request, so any `unserialize()` call on the site, including WordPress core and other plugins, can load this plugin's classes. To be narrowed or removed.
+- PHP 8.1+ deprecations found once the admin screens and AJAX actions run:
+  - return types not compatible with `ArrayAccess`, `Countable` or `IteratorAggregate` in `Ai1ec_Abstract_Query` (`lib/http/request/abstract.php:198-222`), `SG_iCal_Line` (`lib/iCal/helper/SG_iCal_Line.php:114-162`) and `Twig_Node` (`vendor/twig/Node.php:217`, `:222`)
+  - automatic conversion of false to array in `Ai1ec_Javascript_Controller::load_admin_js()` (`app/controller/javascript.php:366` and `:381`; `$script_to_load` starts as `FALSE`)
+- PHP 8.4+ deprecations: implicitly nullable `$argv` in `Ai1ec_Abstract_Query::__construct()` (`lib/http/request/abstract.php:46`) and `Ai1ec_Request_Parser::__construct()` (`lib/http/request/parser.php:67`)
+- **Nonce in a public file:** when the "cache dynamic JS" setting (`cache_dynamic_js`) is on, the front-end calendar script is written to `public/js_cache/calendar.js`, and it includes `calendar_feeds_nonce` (`ai1ec_ics_feed_nonce`, `app/controller/javascript.php:463`) for the user whose visit generated the file. The nonce is tied to that user's login session. To be removed from the front-end configuration.
+- **Not yet audited:** the feeds page form submission (not the AJAX call) reaches `handle_feeds_page_post()` through `app/controller/calendar-feeds.php:54-57` and `app/view/admin/calendar-feeds.php:105`; its nonce and capability checks have not been reviewed.
+- **Unsanitised feed inputs:** `feed_category` in the add/edit feed handler (`lib/calendar-feed/ics.php:610-611`, `:686-691`) and the feed submission fields `ai1ec_calendar_url`, `ai1ec_submitter_email` and `ai1ec_categories` (`lib/calendar-feed/ics.php:243-248`).
 
 ---
 *Forked and maintained by the SudoWP Project.*

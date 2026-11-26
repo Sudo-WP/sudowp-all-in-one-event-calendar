@@ -155,6 +155,12 @@ When using this plugin:
 - Added a capability and a nonce check to ai1ec_feeds_page_post and ai1ec_search_events (manage_ai1ec_feeds) and ai1ec_rescan_cache (manage_options); before, any logged-in user could use them
 - Added a nonce check to ai1ec_import_suggested_event and ai1ec_update_ics, which already checked a capability
 
+### Planned for 3.0.6
+- Remove calendar_feeds_nonce from the front-end configuration: with cache_dynamic_js on, it is written into the public file public/js_cache/calendar.js for the user whose visit generated it (tied to that user's login session)
+- Review the nonce and capability checks on the non-AJAX feeds page form submission (handle_feeds_page_post() via app/controller/calendar-feeds.php:54-57 and app/view/admin/calendar-feeds.php:105)
+- Sanitise feed_category in the add/edit feed handler and the feed submission fields ai1ec_calendar_url, ai1ec_submitter_email and ai1ec_categories
+- Narrow or remove the request-wide unserialize_callback_func = spl_autoload_call setting
+
 ### v3.0.4 (tagged, not released)
 - Fixed an SQL injection in the suggested-event import handler (feed ID bound with $wpdb->prepare())
 - Unserialised the stored event cost value with allowed_classes => false
